@@ -11,4 +11,13 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    proxy: {
+      '/api_proxy': {
+        target: 'http://34.205.252.57',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api_proxy/, ''),
+      },
+    },
+  },
 })
