@@ -216,6 +216,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         setMessagesMap(prev => ({ ...prev, [newConv.id]: [] }));
         setCurrentConv(newConv);
         setWaitingForFeedback(false);
+        console.log("🟦 [FE DEBUG] Generated New Conversation UUID:", newConv.id);
     };
 
     const searchConversations = (query: string): Conversation[] => {
