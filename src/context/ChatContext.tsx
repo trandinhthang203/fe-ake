@@ -1,9 +1,12 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { Conversation, Message } from '../types/chat';
 import { v4 as uuidv4 } from 'uuid';
 import { chatService } from '../services/chatService';
+import { sessionService } from '../services/sessionService';
+import type { SessionResponse, SessionDetailResponse, ConversationResponse } from '../types/api';
 import { toast } from 'sonner';
+import { useAuth } from './AuthContext';
 
 interface ChatContextProps {
     conversations: Conversation[];
@@ -13,12 +16,13 @@ interface ChatContextProps {
     waitingForFeedback: boolean;
 
     // Actions
-    setCurrentConversation: (conversationId: string) => void;
+    setCurrentConversation: (conversationId: string) => Promise<void>;
     sendMessage: (content: string) => Promise<void>;
     sendFeedback: (feedback: string) => Promise<void>;
-    createNewConversation: () => void;
+    createNewConversation: () => Promise<void>;
     searchConversations: (query: string) => Conversation[];
-    deleteConversation: (id: string) => void;
+    deleteConversation: (id: string) => Promise<void>;
+    loadConversations: () => Promise<void>;
 }
 
 const ChatContext = createContext<ChatContextProps | undefined>(undefined);
@@ -30,25 +34,72 @@ export const useChat = () => {
 };
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
-    // In a real app, conversations would be loaded from backend on mount.
-    // For now, we'll keep them in local state or localStorage could be added.
+    const { user, isLoading: authLoading } = useAuth();
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [currentConversation, setCurrentConv] = useState<Conversation | null>(null);
     const [messagesMap, setMessagesMap] = useState<Record<string, Message[]>>({});
     const [isLoading, setIsLoading] = useState(false);
-
-    // Logic for feedback flow
     const [waitingForFeedback, setWaitingForFeedback] = useState(false);
+
+    // Load conversations when user is authenticated
+    useEffect(() => {
+        if (user && !authLoading) {
+            loadConversations();
+        } else if (!user && !authLoading) {
+            // Clear conversations when user logs out
+            setConversations([]);
+            setCurrentConv(null);
+            setMessagesMap({});
+        }
+    }, [user, authLoading]);
 
     // Computed messages for current conversation
     const messages = currentConversation ? (messagesMap[currentConversation.id] || []) : [];
 
     // Switch conversation
-    const setCurrentConversation = (conversationId: string) => {
+    const setCurrentConversation = async (conversationId: string) => {
         const conv = conversations.find(c => c.id === conversationId);
         if (conv) {
             setCurrentConv(conv);
             setWaitingForFeedback(false); // Reset waiting state when switching
+
+            // Load conversation history if not already loaded
+            if (!messagesMap[conversationId] || messagesMap[conversationId].length === 0) {
+                try {
+                    const sessionId = parseInt(conversationId);
+                    const sessionDetail = await sessionService.getSessionDetails(sessionId);
+
+                    // Convert backend conversations to frontend messages
+                    const messages: Message[] = sessionDetail.conversations.map((conv, index) => ({
+                        id: conv.conversation_id,
+                        conversationId: conversationId,
+                        role: conv.is_user ? 'user' : 'bot',
+                        content: conv.content,
+                        timestamp: new Date(conv.created_at)
+                    }));
+
+                    setMessagesMap(prev => ({
+                        ...prev,
+                        [conversationId]: messages
+                    }));
+
+                    // Update conversation metadata
+                    setConversations(prev => prev.map(c =>
+                        c.id === conversationId
+                            ? {
+                                ...c,
+                                messageCount: messages.length,
+                                lastMessage: messages.length > 0 ? messages[messages.length - 1].content.substring(0, 50) + '...' : undefined,
+                                lastMessageTime: messages.length > 0 ? messages[messages.length - 1].timestamp : c.lastMessageTime
+                            }
+                            : c
+                    ));
+
+                } catch (error) {
+                    console.error('Error loading conversation history:', error);
+                    toast.error('Không thể tải lịch sử trò chuyện');
+                }
+            }
         }
     };
 
@@ -80,9 +131,10 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
         try {
             // 2. Call Backend API
+            const sessionId = parseInt(currentConversation.id);
             const response = await chatService.sendMessage(
                 content.trim(),
-                currentConversation.id,
+                sessionId,
                 false // use_cache default
             );
 
@@ -164,8 +216,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         }));
 
         try {
+            const sessionId = parseInt(currentConversation.id);
             const response = await chatService.sendFeedback(
-                currentConversation.id,
+                sessionId,
                 feedback.trim()
             );
 
@@ -203,20 +256,42 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const createNewConversation = () => {
-        const newConv: Conversation = {
-            id: uuidv4(), // Client-side ID first, backend will use this or map it
-            title: 'Cuộc trò chuyện mới',
-            lastMessageTime: new Date(),
-            createdAt: new Date(),
-            messageCount: 0
-        };
+    const loadConversations = async () => {
+        try {
+            const sessions = await sessionService.getAllSessions();
+            const convs: Conversation[] = sessions.map(session => ({
+                id: session.session_id.toString(),
+                title: session.title,
+                lastMessageTime: new Date(session.created_at),
+                createdAt: new Date(session.created_at),
+                messageCount: 0 // Will be updated when loading messages
+            }));
+            setConversations(convs);
+        } catch (error) {
+            console.error('Error loading conversations:', error);
+            toast.error('Không thể tải danh sách cuộc trò chuyện');
+        }
+    };
 
-        setConversations(prev => [newConv, ...prev]);
-        setMessagesMap(prev => ({ ...prev, [newConv.id]: [] }));
-        setCurrentConv(newConv);
-        setWaitingForFeedback(false);
-        console.log("🟦 [FE DEBUG] Generated New Conversation UUID:", newConv.id);
+    const createNewConversation = async () => {
+        try {
+            const newSession = await sessionService.createSession();
+            const newConv: Conversation = {
+                id: newSession.session_id.toString(),
+                title: newSession.title,
+                lastMessageTime: new Date(newSession.created_at),
+                createdAt: new Date(newSession.created_at),
+                messageCount: 0
+            };
+
+            setConversations(prev => [newConv, ...prev]);
+            setMessagesMap(prev => ({ ...prev, [newConv.id]: [] }));
+            setCurrentConv(newConv);
+            setWaitingForFeedback(false);
+        } catch (error) {
+            console.error('Error creating conversation:', error);
+            toast.error('Không thể tạo cuộc trò chuyện mới');
+        }
     };
 
     const searchConversations = (query: string): Conversation[] => {
@@ -228,15 +303,23 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         );
     };
 
-    const deleteConversation = (id: string) => {
-        setConversations(prev => prev.filter(c => c.id !== id));
-        setMessagesMap(prev => {
-            const newMap = { ...prev };
-            delete newMap[id];
-            return newMap;
-        });
-        if (currentConversation?.id === id) {
-            setCurrentConv(null);
+    const deleteConversation = async (id: string) => {
+        try {
+            const sessionId = parseInt(id);
+            await sessionService.deleteSession(sessionId);
+            setConversations(prev => prev.filter(c => c.id !== id));
+            setMessagesMap(prev => {
+                const newMap = { ...prev };
+                delete newMap[id];
+                return newMap;
+            });
+            if (currentConversation?.id === id) {
+                setCurrentConv(null);
+            }
+            toast.success('Đã xóa cuộc trò chuyện');
+        } catch (error) {
+            console.error('Error deleting conversation:', error);
+            toast.error('Không thể xóa cuộc trò chuyện');
         }
     };
 
@@ -252,7 +335,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
             sendFeedback,
             createNewConversation,
             searchConversations,
-            deleteConversation
+            deleteConversation,
+            loadConversations
         }}>
             {children}
         </ChatContext.Provider>

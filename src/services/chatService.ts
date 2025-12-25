@@ -7,12 +7,12 @@ export const chatService = {
    */
   async sendMessage(
     query: string,
-    conversationId?: string,
+    sessionId: number,
     useCache: boolean = false
   ): Promise<ChatResponse> {
     const payload: ChatRequest = {
       query,
-      conversation_id: conversationId,
+      session_id: sessionId,
       use_cache: useCache,
     };
 
@@ -24,11 +24,11 @@ export const chatService = {
    * Send user feedback to continue conversation
    */
   async sendFeedback(
-    conversationId: string,
-    userFeedback: string
+    sessionId: number,
+    userFeedback?: string
   ): Promise<ChatResponse> {
     const payload: FeedbackRequest = {
-      conversation_id: conversationId,
+      session_id: sessionId,
       user_feedback: userFeedback,
     };
 

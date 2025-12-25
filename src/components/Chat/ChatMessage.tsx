@@ -69,19 +69,31 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
 
                     {/* Citations for bot messages */}
                     {!isUser && message.citations && message.citations.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-border/50">
-                            <div className="text-xs font-medium mb-2 text-muted-foreground">Nguồn tham khảo:</div>
-                            <div className="flex flex-col gap-1">
-                                {message.citations.map((citation) => (
+                        <div className="mt-4 pt-3 border-t border-gray-200">
+                            <div className="flex items-center gap-2 text-xs font-medium mb-3 text-gray-600">
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                                <span>Nguồn tham khảo từ SPOKE Knowledge Graph:</span>
+                            </div>
+                            <div className="grid gap-2">
+                                {message.citations.map((citation, index) => (
                                     <a
                                         key={citation.id}
                                         href={citation.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-xs text-primary hover:underline flex items-center gap-1"
+                                        className="flex items-start gap-2 p-2 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors group"
                                     >
-                                        <span>📚</span>
-                                        <span>{citation.title}</span>
+                                        <span className="text-xs font-medium text-blue-600 bg-blue-200 rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            {index + 1}
+                                        </span>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs text-gray-700 group-hover:text-blue-700 leading-tight break-words">
+                                                {citation.title}
+                                            </p>
+                                            <p className="text-xs text-gray-500 mt-1 truncate">
+                                                {citation.url}
+                                            </p>
+                                        </div>
                                     </a>
                                 ))}
                             </div>

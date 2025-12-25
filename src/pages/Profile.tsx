@@ -26,7 +26,7 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const Profile = () => {
-    const { user, login } = useAuth();
+    const { user, updateProfile } = useAuth();
     const [isUploading, setIsUploading] = useState(false);
 
     const form = useForm<ProfileFormValues>({
@@ -42,20 +42,15 @@ const Profile = () => {
     });
 
     const onSubmit = async (data: ProfileFormValues) => {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Update user context (mock)
-        if (user) {
-            const updatedUser = {
-                ...user,
-                ...data,
-                dob: data.dob ? new Date(data.dob) : undefined
-            };
-
-            login(updatedUser); // Update context
+        try {
+            const fullname = `${data.lastName} ${data.firstName}`.trim();
+            await updateProfile({
+                email: data.email,
+                fullname: fullname,
+            });
             toast.success('Cập nhật thông tin thành công!');
-            console.log('Updated user:', updatedUser);
+        } catch (error) {
+            toast.error('Cập nhật thông tin thất bại!');
         }
     };
 
