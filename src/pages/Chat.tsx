@@ -28,27 +28,37 @@ export default function ChatPage() {
 
     return (
         <MainLayout>
-            <div className="w-full h-full flex flex-col">
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
                 {!currentConversation ? (
-                    <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-6">
-                        <div className="rounded-full bg-primary/10 p-6">
-                            <span className="text-6xl">👋</span>
+                    <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-8 animate-fade-in">
+                        <div className="relative">
+                            <div className="absolute -inset-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur opacity-20 animate-pulse"></div>
+                            <div className="relative rounded-full bg-gradient-to-r from-blue-100 to-purple-100 p-8 shadow-xl">
+                                <span className="text-7xl animate-bounce">👋</span>
+                            </div>
                         </div>
-                        <div className="space-y-2">
-                            <h2 className="text-3xl font-bold tracking-tight">Chào mừng đến với AKE Chat</h2>
-                            <p className="text-muted-foreground max-w-md mx-auto">
+                        <div className="space-y-4 max-w-lg">
+                            <h2 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                Chào mừng đến với AKE Chat
+                            </h2>
+                            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
                                 Trợ lý AI y khoa thông minh. Bắt đầu bằng cách tạo một cuộc trò chuyện mới để khám phá Knowledge Graph.
                             </p>
                         </div>
-                        <Button onClick={createNewConversation} size="lg" className="rounded-full px-8">
-                            + Tạo cuộc trò chuyện mới
+                        <Button
+                            onClick={createNewConversation}
+                            size="lg"
+                            className="rounded-full px-10 py-4 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105"
+                        >
+                            <span className="mr-2">+</span>
+                            Tạo cuộc trò chuyện mới
                         </Button>
                     </div>
                 ) : (
-                    <>
-                        <ChatContainer messages={messages} isLoading={isLoading} />
-                        <ChatInput onSend={sendMessage} disabled={isLoading} />
-                    </>
+                    <div className="flex-1 flex flex-col min-h-0">
+                        <ChatContainer />
+                        <ChatInput onSend={sendMessage} disabled={isLoading} isLoading={isLoading} />
+                    </div>
                 )}
             </div>
         </MainLayout>

@@ -173,8 +173,8 @@ const Guest = () => {
 
         {/* Footer */}
         <footer className="mt-24 pt-12 border-t border-gray-200">
-          <div className="text-center text-gray-600">
-            <p>&copy; 2024 AI Agent Y Sinh SPOKE. Được phát triển với ❤️ cho cộng đồng y sinh.</p>
+          <div className="text-center py-4 text-sm text-gray-500 border-t">
+            <p>&copy; {new Date().getFullYear()} ThangTD. All rights reserved.</p>
           </div>
         </footer>
       </div>

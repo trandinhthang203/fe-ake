@@ -1,10 +1,13 @@
 import path from "path"
 import react from "@vitejs/plugin-react"
+import tailwindcss from "@tailwindcss/vite"  // ← THÊM DÒNG NÀY
 import { defineConfig } from "vite"
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    tailwindcss(),  // ← THÊM PLUGIN NÀY
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

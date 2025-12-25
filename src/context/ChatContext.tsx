@@ -13,6 +13,8 @@ interface ChatContextProps {
     currentConversation: Conversation | null;
     messages: Message[];
     isLoading: boolean;
+    isStreaming: boolean;
+    streamingContent: string;
     waitingForFeedback: boolean;
 
     // Actions
@@ -39,6 +41,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     const [currentConversation, setCurrentConv] = useState<Conversation | null>(null);
     const [messagesMap, setMessagesMap] = useState<Record<string, Message[]>>({});
     const [isLoading, setIsLoading] = useState(false);
+    const [isStreaming, setIsStreaming] = useState(false);
+    const [streamingContent, setStreamingContent] = useState('');
     const [waitingForFeedback, setWaitingForFeedback] = useState(false);
 
     // Load conversations when user is authenticated
@@ -130,7 +134,11 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         }));
 
         try {
-            // 2. Call Backend API
+            // 2. Start streaming response
+            setIsStreaming(true);
+            setStreamingContent('');
+
+            // 3. Call Backend API
             const sessionId = parseInt(currentConversation.id);
             const response = await chatService.sendMessage(
                 content.trim(),
@@ -138,48 +146,71 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
                 false // use_cache default
             );
 
-            // 3. Process Bot Response
-            const botMessage: Message = {
-                id: uuidv4(),
-                conversationId: currentConversation.id,
-                role: 'bot',
-                content: response.answer,
-                citations: response.sources && Object.keys(response.sources).length > 0 ? [{
-                    id: uuidv4(),
-                    title: 'SPOKE Knowledge Graph',
-                    url: 'https://spoke.ucsf.edu/', // Placeholder or real link if available
-                    snippet: JSON.stringify(response.sources)
-                }] : [], // Helper to map 'sources' dict to array if needed, or keep as is
-                timestamp: new Date()
-            };
+            // 4. Simulate streaming by progressively revealing text
+            const fullContent = response.answer;
+            const words = fullContent.split(' ');
+            let currentText = '';
+            let wordIndex = 0;
 
-            setMessagesMap(prev => ({
-                ...prev,
-                [currentConversation.id]: [...(prev[currentConversation.id] || []), botMessage]
-            }));
+            const streamInterval = setInterval(() => {
+                if (wordIndex < words.length) {
+                    currentText += (wordIndex > 0 ? ' ' : '') + words[wordIndex];
+                    setStreamingContent(currentText);
+                    wordIndex++;
+                } else {
+                    // Streaming complete
+                    clearInterval(streamInterval);
+                    setIsStreaming(false);
 
-            // 4. Handle Feedback Loop
-            if (response.needs_feedback) {
-                setWaitingForFeedback(true);
-                toast.info("Bot cần thêm thông tin từ bạn để trả lời chính xác hơn.");
-            } else {
-                setWaitingForFeedback(false);
-            }
+                    // 5. Create final bot message
+                    const botMessage: Message = {
+                        id: uuidv4(),
+                        conversationId: currentConversation.id,
+                        role: 'bot',
+                        content: fullContent,
+                        citations: response.sources && Object.keys(response.sources).length > 0 ? [{
+                            id: uuidv4(),
+                            title: 'SPOKE Knowledge Graph',
+                            url: 'https://spoke.ucsf.edu/',
+                            snippet: JSON.stringify(response.sources)
+                        }] : [],
+                        timestamp: new Date()
+                    };
 
-            // 5. Update Conversation Metadata (last message, time)
-            setConversations(prev => prev.map(conv =>
-                conv.id === currentConversation.id
-                    ? {
-                        ...conv,
-                        lastMessage: botMessage.content.substring(0, 50) + '...',
-                        lastMessageTime: botMessage.timestamp,
-                        messageCount: (messagesMap[currentConversation.id]?.length || 0) + 2
+                    setMessagesMap(prev => ({
+                        ...prev,
+                        [currentConversation.id]: [...(prev[currentConversation.id] || []), botMessage]
+                    }));
+
+                    setStreamingContent('');
+
+                    // 6. Handle Feedback Loop
+                    if (response.needs_feedback) {
+                        setWaitingForFeedback(true);
+                        toast.info("Bot cần thêm thông tin từ bạn để trả lời chính xác hơn.");
+                    } else {
+                        setWaitingForFeedback(false);
                     }
-                    : conv
-            ));
+
+                    // 7. Update Conversation Metadata
+                    setConversations(prev => prev.map(conv =>
+                        conv.id === currentConversation.id
+                            ? {
+                                ...conv,
+                                lastMessage: botMessage.content.substring(0, 50) + '...',
+                                lastMessageTime: botMessage.timestamp,
+                                messageCount: (messagesMap[currentConversation.id]?.length || 0) + 2
+                            }
+                            : conv
+                    ));
+                }
+            }, 50); // Adjust speed as needed
 
         } catch (error) {
             console.error('Error sending message:', error);
+            setIsStreaming(false);
+            setStreamingContent('');
+
             const errorMessage: Message = {
                 id: uuidv4(),
                 conversationId: currentConversation.id,
@@ -329,6 +360,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
             currentConversation,
             messages,
             isLoading,
+            isStreaming,
+            streamingContent,
             waitingForFeedback,
             setCurrentConversation,
             sendMessage,
