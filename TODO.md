@@ -1,13 +1,13 @@
-# Fix Issues in AKE Chat App
+# TODO: Fix UI Issues in AKE Chat
 
-## Issues to Fix:
-- [ ] Duplicate sidebar: Remove custom sidebar from MainLayout and use proper UI sidebar
-- [ ] History not showing: Integrate ChatList into sidebar for history display
-- [ ] [object Object] in chat bubbles: Ensure message content is always string
+## Issues to Fix
+- ❌ Căn lề & spacing tin nhắn chưa đồng nhất, nhìn thiếu gọn.
+- ❌ Sidebar lịch sử chat hiển thị đơn điệu, item chưa nổi bật, khó phân biệt trạng thái.
+- ❌ Icon & branding (AKE Chat) còn đơn giản, chưa chuyên nghiệp.
 
-## Progress:
-- [ ] Analyze current sidebar implementation
-- [ ] Update MainLayout to use UI sidebar components
-- [ ] Integrate ChatList for history display
-- [ ] Fix message content type issues
-- [ ] Test all fixes
+## Tasks
+- [x] Fix message alignment & spacing in ChatMessage.tsx
+- [x] Enhance sidebar chat item prominence in ChatItem.tsx
+- [x] Improve AKE Icon & branding in AKEIcon.tsx
+- [x] Test UI responsiveness and dark mode
+- [x] Verify accessibility (contrast, focus states)

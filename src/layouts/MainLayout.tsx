@@ -8,6 +8,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
+  SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -35,54 +36,57 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   );
 
   return (
-    <div className="flex h-screen w-full">
-      <Sidebar>
+    <div className="flex h-screen w-full bg-gradient-to-br from-white via-blue-50/30 to-purple-50/50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
+      <Sidebar variant="inset">
         <SidebarHeader>
-          <div className="flex items-center px-2 py-2">
-            <AKEIcon className="mr-2 h-6 w-6" />
-            <h1 className="text-lg font-bold">AKE Chat</h1>
+          <div className="flex items-center px-4 py-4">
+            <div className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg blur opacity-25"></div>
+              <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-lg">
+                <AKEIcon className="h-5 w-5 text-white" />
+              </div>
+            </div>
+            <h1 className="text-lg font-bold ml-3 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">AKE Chat</h1>
           </div>
         </SidebarHeader>
 
-        <SidebarContent>
-          <SidebarGroup>
+        <SidebarContent className="px-4">
+          <SidebarGroup className="mb-4">
             <SidebarGroupContent>
-              <div className="px-2 py-2">
+              <div className="space-y-3">
                 <NewChatButton onClick={createNewConversation} />
-              </div>
-              <div className="px-2 py-2">
                 <SearchChat onSearch={setSearchQuery} />
               </div>
             </SidebarGroupContent>
           </SidebarGroup>
 
-          <SidebarGroup>
+          <SidebarGroup className="mb-4">
             <SidebarGroupContent>
-              <div className="px-2 py-1">
-                <div className="flex items-center text-sm font-medium text-muted-foreground mb-2">
+              <div className="mb-3">
+                <div className="flex items-center text-sm font-medium text-muted-foreground">
                   <Clock className="mr-2 h-4 w-4" />
                   History
                 </div>
-                <ChatList
-                  conversations={filteredConversations}
-                  currentConversationId={currentConversation?.id || null}
-                  onSelectConversation={setCurrentConversation}
-                />
               </div>
+              <ChatList
+                conversations={filteredConversations}
+                currentConversationId={currentConversation?.id || null}
+                onSelectConversation={setCurrentConversation}
+              />
             </SidebarGroupContent>
           </SidebarGroup>
 
           <SidebarGroup>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="space-y-2">
                 <SidebarMenuItem>
-                  <SidebarMenuButton>
+                  <SidebarMenuButton className="rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200">
                     <Brain className="h-4 w-4" />
                     <span>AI Settings</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton>
+                  <SidebarMenuButton className="rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200">
                     <Sparkles className="h-4 w-4" />
                     <span>Features</span>
                   </SidebarMenuButton>
@@ -99,14 +103,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         </SidebarFooter>
       </Sidebar>
 
-      <main className="flex-1 overflow-hidden">
-        <div className="flex h-full">
-          <SidebarTrigger className="absolute top-4 left-4 z-10 md:hidden" />
-          <div className="flex-1 overflow-hidden">
-            {children}
-          </div>
-        </div>
-      </main>
+      <SidebarInset>
+        <SidebarTrigger className="absolute top-4 left-4 z-10 md:hidden" />
+        {children}
+      </SidebarInset>
     </div>
   );
 };

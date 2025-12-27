@@ -57,20 +57,20 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     };
 
     return (
-        <div className={`flex gap-4 mb-6 animate-fade-in-up ${isUser ? 'justify-end' : 'justify-start'} items-end`}> 
+        <div className={`flex gap-3 mb-4 animate-fade-in-up ${isUser ? 'justify-end' : 'justify-start'} items-end`}>
             {/* Avatar - left for bot, right for user */}
             {!isUser && (
-                <Avatar className="w-9 h-9 sm:w-10 sm:h-10 flex-shrink-0">
-                    <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-full p-2">
-                        <Brain className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Avatar className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0">
+                    <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-full p-1.5">
+                        <Brain className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </AvatarFallback>
                 </Avatar>
             )}
 
             {/* Message content */}
-            <div className={`flex flex-col max-w-[86%] sm:max-w-[78%] ${isUser ? 'items-end' : 'items-start'}`}>
+            <div className={`flex flex-col max-w-[85%] sm:max-w-[75%] ${isUser ? 'items-end' : 'items-start'}`}>
                 {/* Sender name */}
-                <div className="text-xs text-muted-foreground mb-1 px-1">
+                <div className="text-xs text-muted-foreground mb-0.5 px-1">
                     {isUser ? displayName : 'Medical AI Assistant'}
                 </div>
 
@@ -78,7 +78,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                 <div className="group relative">
                     {/* Message bubble */}
                     <div
-                        className={`relative rounded-2xl px-4 py-3 transition-shadow duration-200 ${isUser
+                        className={`relative rounded-2xl px-3 py-2.5 transition-shadow duration-200 ${isUser
                             ? 'bg-gradient-to-r from-purple-500 via-indigo-600 to-blue-600 text-white shadow-lg'
                             : 'bg-white dark:bg-[#0b1220] border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-gray-100 shadow-sm'
                             }`}

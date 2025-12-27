@@ -16,8 +16,8 @@ const ChatList: React.FC<ChatListProps> = ({
 }) => {
     if (conversations.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-                <p className="text-sm text-muted-foreground">
+            <div className="flex flex-col items-center justify-center py-8 px-4 text-center rounded-xl bg-gradient-to-br from-blue-50/50 to-purple-50/50 border border-blue-200/50">
+                <p className="text-sm text-muted-foreground font-medium">
                     Chưa có cuộc trò chuyện nào
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -28,8 +28,8 @@ const ChatList: React.FC<ChatListProps> = ({
     }
 
     return (
-        <ScrollArea className="flex-1">
-            <div className="flex flex-col gap-1 p-2">
+        <div className="flex-1 overflow-y-auto">
+            <div className="flex flex-col gap-2 p-2">
                 {conversations.map((conversation) => (
                     <ChatItem
                         key={conversation.id}
@@ -39,7 +39,7 @@ const ChatList: React.FC<ChatListProps> = ({
                     />
                 ))}
             </div>
-        </ScrollArea>
+        </div>
     );
 };
 

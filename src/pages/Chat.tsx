@@ -28,12 +28,12 @@ export default function ChatPage() {
 
     return (
         <MainLayout>
-            <div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-white via-blue-50/30 to-purple-50/50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
                 {!currentConversation ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-8 animate-fade-in">
                         <div className="relative">
-                            <div className="absolute -inset-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur opacity-20 animate-pulse"></div>
-                            <div className="relative rounded-full bg-gradient-to-r from-blue-100 to-purple-100 p-8 shadow-xl">
+                            <div className="absolute -inset-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur opacity-25 animate-pulse"></div>
+                            <div className="relative rounded-full bg-gradient-to-r from-blue-100 to-purple-100 p-8 shadow-2xl">
                                 <span className="text-7xl animate-bounce">👋</span>
                             </div>
                         </div>

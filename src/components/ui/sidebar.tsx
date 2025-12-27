@@ -24,8 +24,11 @@ import {
 } from "@/components/ui/tooltip"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
+const SIDEBAR_WIDTH_COOKIE_NAME = "sidebar_width"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = "16rem"
+const SIDEBAR_WIDTH_DEFAULT = "16rem"
+const SIDEBAR_WIDTH_MIN = "12rem"
+const SIDEBAR_WIDTH_MAX = "24rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
@@ -38,6 +41,8 @@ type SidebarContextProps = {
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
   toggleSidebar: () => void
+  width: string
+  setWidth: (width: string) => void
 }
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null)
@@ -66,6 +71,22 @@ function SidebarProvider({
 }) {
   const isMobile = useIsMobile()
   const [openMobile, setOpenMobile] = React.useState(false)
+
+  // Get initial width from cookie or use default
+  const getInitialWidth = () => {
+    const cookieValue = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith(`${SIDEBAR_WIDTH_COOKIE_NAME}=`))
+      ?.split("=")[1]
+    return cookieValue || SIDEBAR_WIDTH_DEFAULT
+  }
+
+  const [width, _setWidth] = React.useState(getInitialWidth())
+
+  const setWidth = React.useCallback((value: string) => {
+    _setWidth(value)
+    document.cookie = `${SIDEBAR_WIDTH_COOKIE_NAME}=${value}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+  }, [])
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
@@ -120,8 +141,10 @@ function SidebarProvider({
       openMobile,
       setOpenMobile,
       toggleSidebar,
+      width,
+      setWidth,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
+    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar, width, setWidth]
   )
 
   return (
@@ -131,7 +154,7 @@ function SidebarProvider({
           data-slot="sidebar-wrapper"
           style={
             {
-              "--sidebar-width": SIDEBAR_WIDTH,
+              "--sidebar-width": width,
               "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
               ...style,
             } as React.CSSProperties
@@ -219,6 +242,7 @@ function Sidebar({
           "relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear",
           "group-data-[collapsible=offcanvas]:w-0",
           "group-data-[side=right]:rotate-180",
+          "group-data-[variant=inset]:w-0",
           variant === "floating" || variant === "inset"
             ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
             : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)"
@@ -246,6 +270,7 @@ function Sidebar({
         >
           {children}
         </div>
+        <SidebarResizer side={side} />
       </div>
     </div>
   )
@@ -302,13 +327,69 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   )
 }
 
+function SidebarResizer({ className, side = "left", ...props }: React.ComponentProps<"div"> & { side?: "left" | "right" }) {
+  const { width, setWidth, isMobile } = useSidebar()
+  const [isDragging, setIsDragging] = React.useState(false)
+
+  const rootFontSize = React.useMemo(() => parseFloat(getComputedStyle(document.documentElement).fontSize), [])
+  const minWidthPx = React.useMemo(() => parseFloat(SIDEBAR_WIDTH_MIN) * rootFontSize, [rootFontSize])
+  const maxWidthPx = React.useMemo(() => parseFloat(SIDEBAR_WIDTH_MAX) * rootFontSize, [rootFontSize])
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true)
+    e.preventDefault()
+  }
+
+  React.useEffect(() => {
+    if (!isDragging) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const clientX = side === "left" ? e.clientX : window.innerWidth - e.clientX
+      const newWidth = Math.max(
+        minWidthPx,
+        Math.min(maxWidthPx, clientX)
+      )
+      setWidth(`${newWidth}px`)
+    }
+
+    const handleMouseUp = () => {
+      setIsDragging(false)
+    }
+
+    document.addEventListener("mousemove", handleMouseMove)
+    document.addEventListener("mouseup", handleMouseUp)
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove)
+      document.removeEventListener("mouseup", handleMouseUp)
+    }
+  }, [isDragging, setWidth, side, minWidthPx, maxWidthPx])
+
+  if (isMobile) return null
+
+  return (
+    <div
+      data-sidebar="resizer"
+      data-slot="sidebar-resizer"
+      className={cn(
+        "absolute inset-y-0 z-30 w-1 cursor-col-resize bg-transparent hover:bg-sidebar-border transition-colors",
+        "group-data-[side=left]:right-0 group-data-[side=right]:left-0",
+        isDragging && "bg-sidebar-border",
+        className
+      )}
+      onMouseDown={handleMouseDown}
+      {...props}
+    />
+  )
+}
+
 function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
   return (
     <main
       data-slot="sidebar-inset"
       className={cn(
         "bg-background relative flex w-full flex-1 flex-col",
-        "md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2",
+        "md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2",
         className
       )}
       {...props}
@@ -718,6 +799,7 @@ export {
   SidebarMenuSubItem,
   SidebarProvider,
   SidebarRail,
+  SidebarResizer,
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,
