@@ -4,9 +4,11 @@ import ChatMessage from './ChatMessage';
 import StreamingMessage from './StreamingMessage';
 import { Skeleton } from '../ui/skeleton';
 import { Brain, Loader2 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const ChatContainer: React.FC = () => {
     const { messages, isLoading, isStreaming, streamingContent } = useChat();
+    const { user } = useAuth();
     const scrollRef = useRef<HTMLDivElement>(null);
     const [showScrollButton, setShowScrollButton] = useState(false);
 
@@ -44,6 +46,22 @@ const ChatContainer: React.FC = () => {
 
     return (
         <div className="flex-1 flex flex-col overflow-hidden relative">
+            {/* Centered header similar to screenshots */}
+            <div className="w-full border-b border-transparent dark:border-gray-800">
+                <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 text-center">
+                    <div className="mx-auto mb-4 w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center bg-white dark:bg-transparent shadow-sm dark:shadow-none">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white">
+                            <span className="text-xl">*</span>
+                        </div>
+                    </div>
+                    <h1 className="text-2xl sm:text-3xl font-bold mb-1 text-gray-900 dark:text-gray-100">Hello, {user?.fullname || 'User'}</h1>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">I'm ready to analyze medical data. Ask me about symptoms, protein structures, or drug interactions.</p>
+                    <div className="mt-3">
+                        <span className="inline-block px-3 py-1 text-xs bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-300 rounded-full">{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                    </div>
+                </div>
+            </div>
+
             <div
                 ref={scrollRef}
                 className="flex-1 overflow-y-auto p-2 sm:p-4 scroll-smooth"

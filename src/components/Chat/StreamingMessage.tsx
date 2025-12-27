@@ -49,8 +49,8 @@ const StreamingMessage: React.FC<StreamingMessageProps> = ({ content, isTyping =
     return (
         <div className="flex gap-4 mb-6 justify-start animate-fade-in-up">
             {/* AI Avatar */}
-            <Avatar className="w-8 h-8 flex-shrink-0">
-                <AvatarFallback className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+            <Avatar className="w-9 h-9 flex-shrink-0">
+                <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-full p-2">
                     <Brain className="w-4 h-4" />
                 </AvatarFallback>
             </Avatar>
@@ -64,11 +64,11 @@ const StreamingMessage: React.FC<StreamingMessageProps> = ({ content, isTyping =
 
                 {/* Streaming message bubble */}
                 <div className="group relative">
-                    <div className="rounded-2xl px-4 py-3 shadow-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                    <div className="rounded-2xl px-4 py-3 shadow-sm bg-white dark:bg-[#0b1220] border border-gray-200 dark:border-gray-800">
                         <div className="prose prose-sm dark:prose-invert max-w-none">
-                            <p className="mb-2 last:mb-0 leading-relaxed break-words">
+                            <p className="mb-2 last:mb-0 leading-relaxed break-words text-sm">
                                 {displayContent}
-                                {isTyping && showCursor && <span className="inline-block w-2 h-5 bg-blue-500 ml-1 animate-pulse"></span>}
+                                {isTyping && showCursor && <span className="inline-block w-1.5 h-5 bg-indigo-500 ml-2 align-bottom animate-pulse"></span>}
                             </p>
                         </div>
                     </div>
